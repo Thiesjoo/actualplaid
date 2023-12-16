@@ -16,7 +16,12 @@ const fastify = Fastify({
     }
 });
 let config;
-const appConfig = getAppConfigFromEnv()
+const appConfig = getAppConfigFromEnv();
+console.log({
+    clientID: appConfig.PLAID_CLIENT_ID,
+    secret: appConfig.PLAID_SECRETS[appConfig.PLAID_ENV],
+    env: plaid.environments[appConfig.PLAID_ENV],
+})
 const plaidClient = new plaid.Client({
     clientID: appConfig.PLAID_CLIENT_ID,
     secret: appConfig.PLAID_SECRETS[appConfig.PLAID_ENV],
@@ -315,14 +320,15 @@ module.exports = async (command, flags) => {
         }
 
         for (let [actualId, account] of Object.entries(syncingData)) {
+            console.log(`Checking balance for account: ${account.actualName} (${account.plaidBankName})`)
+            console.log(account)
             const balanceFromActual = await getBalance(actual, actualId);
             const plaidBalanceInformation = await plaidClient.getBalance(account.plaidToken, {
                 account_ids: [account.plaidAccount.account_id],
             });
 
             const balanceFromPlaid = plaidBalanceInformation.accounts[0].balances.current
-
-            console.log(`Checking balance for account: ${account.actualName} (${account.plaidBankName})`)
+            
             console.log("Actual balance: ", balanceFromActual)
             console.log("Plaid balance: ", balanceFromPlaid)
 
